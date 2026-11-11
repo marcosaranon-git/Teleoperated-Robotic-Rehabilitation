@@ -1,0 +1,23 @@
+# VS Code
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# MATLAB
+*.asv
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Backup
+*.bak
+*.tmp
+
+# Experimental data
+data/logs/*
