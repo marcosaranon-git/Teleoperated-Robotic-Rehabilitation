@@ -1,0 +1,211 @@
+{
+    "plugins": {
+        "path": [
+            "/opt/host/plugins/",
+            "../plugins/",
+            "plugins/",
+            "../../plugins/",
+            "/home/inception/git/commIO/release/x86_64/plugins/",
+            "/home/inception/git/pych/release/x86_64-linux-gnu/plugins/",
+            "/home/pi/aarch64/plugins/"
+        ],
+        "commIO": {
+            "CANOpenIO": "CANOpenIO.so",
+            "SerialIO": "SerialIO.so",
+            "TCPClient":"TCPClient.so"
+        },
+        "deviceIO": {
+            "SensorIO": "SensorIO.so",
+            "ActuatorIO": "ActuatorIO.so",
+            "EPOS": "EPOS.so",
+            "DelsysBaseStation":"DelsysBaseStation.so"
+        },
+        "controlIO": {
+            "KneeR_Joelheira_2": "KneeR_Joelheira_2.so"
+        }
+    },
+    "commIO": {
+        "can0": {
+            "type": "CANOpenIO",
+            "config": {
+                "iface": "can0",
+                "ts": "5ms",
+                "wakeup": "800ns",
+                "thread": "_thr_control0"
+            }
+        },
+                "can1": {
+            "type": "CANOpenIO",
+            "config": {
+                "iface": "can1",
+                "ts": "1ms",
+                "wakeup": "800ns",
+                "thread": "_thr_control0"
+            }
+        },
+        "tcp0": {
+            "type": "TCPClient",
+            "config": {
+                "port": 1515,
+                "addr": "10.239.4.4",
+                "ack": "\n"
+            }
+        }
+    },
+    "deviceIO": {
+        "delsysbs": {
+            "type": "DelsysBaseStation",
+            "config": {
+                "addr": "10.239.4.99",
+                "cmd_port": 50040,
+                "emg_port": 50041,
+                "START_CMDs": true,
+                "STOP_CMDs": true,
+                "log": {
+                    "enable": true,
+                    "file_name": "emg_log"
+                }
+            }
+        },
+        "epos2": {
+            "type": "EPOS",
+            "config": {
+                "source": {
+                    "commIO": "can0",
+                    "NodeID": 2
+                },
+                "mode": "velocity"
+            }
+        },
+        "epos4": {
+            "type": "EPOS",
+            "config": {
+                "source": {
+                    "commIO": "can0",
+                    "NodeID": 4
+                },
+                "mode": "velocity"
+            }
+        },
+        "theta_in_knee_r": {
+            "type": "SensorIO",
+            "config": {
+                "source": {
+                    "commIO": "can0",
+                    "NodeID": 4,
+                    "tpdo": 0,
+                    "lsb_byte": 0,
+                    "n_bytes": 4,
+                    "ctype": "int32"
+                },
+                "eval": "-( x / 4096.0 ) *2.0* M_PI"
+            }
+        },
+        "theta_out_knee_r": {
+            "type": "SensorIO",
+            "config": {
+                "source": {
+                    "commIO": "can0",
+                    "NodeID": 2,
+                    "tpdo": 0,
+                    "lsb_byte": 0,
+                    "n_bytes": 4,
+                    "ctype": "int32"
+                },
+                "eval": "( x / 2000.0) *2.0* M_PI"
+            }
+        },
+          "theta_out_hip_r": {
+            "type": "SensorIO",
+            "config": {
+                "source": {
+                    "commIO": "can1",
+                    "NodeID": 16,
+                    "tpdo": 0,
+                    "lsb_byte": 4,
+                    "n_bytes": 4,
+                    "ctype": "float"
+                },
+                "eval": "x"
+            }
+        },
+        "u_rpm_knee_r": {
+            "type": "ActuatorIO",
+            "config": {
+                "source": {
+                    "commIO": "can0",
+                    "NodeID": 4,
+                    "rpdo": 1,
+                    "lsb_byte": 0,
+                    "n_bytes": 4,
+                    "dlc": 4
+                },
+                "max_value": 5000
+            }
+        },
+        "my_ref_0": {
+            "type": "SensorIO",
+            "config": {
+                "source": {
+                    "commIO": "VirtualIO",
+                    "calibrate": false
+                },
+                "eval": "0.1*sin(2*3.1415*0.5*t)"
+            }
+        }
+    },
+    "controlIO": {
+        "ctrl0": {
+            "type": "KneeR_Joelheira_2",
+            "config": {
+                "sensors": [
+                    "theta_in_knee_r",
+                    "theta_out_knee_r",
+                    "delsysbs",
+                    "theta_out_hip_r"
+                ],
+                "actuators": [
+                    "u_rpm_knee_r"
+                ],
+                "references": [
+                    "my_ref_0"
+                ],
+                "Ks": 104,
+                "GR": 150.0,
+                "kp": 12, 
+                "ki": 1.2,
+                "kd": 0.1,
+                "Kv": -5,
+                "Bv": -0.1,
+                "ts": "5ms",
+                "wakeup": "0ms",
+                "thread": "_thr_control0",
+                "name": "KneeR_Joelheira_2",
+                "log": {
+                    "enable": true,
+                    "file_name": "KneeR_Joelheira_2_0"
+                }
+            }
+        }
+    },
+    "log": {
+        "enable": true,
+        "path": "logs/"
+    },
+    "robot": {
+        "name": "ExoTAO",
+        "type": "biped",
+        "sensors": [
+            "enc_epos5"
+        ],
+        "actuators": [
+            "motor_epos5"
+        ],
+        "controllers": [
+            "SimplePD"
+        ]
+    },
+    "core": {
+        "max_run_time": "5s"
+    }
+}
